@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package proto_define;
+
+option go_package = "mmo-server/proto_define";
+
+import "proto_define/player.proto";
+import "proto_define/message.proto";
+
+// Generic RPC service for handling dynamic method calls
+service RPCService {
+  // Generic method for handling any RPC call
+  rpc Call(RPCRequest) returns (RPCResponse) {}
+  
+  // Stream for bidirectional communication
+  rpc StreamCall(stream RPCRequest) returns (stream RPCResponse) {}
+}
+
+// Player service for handling player-related operations
+service PlayerService {
+  // Update player position
+  rpc UpdatePosition(PlayerPositionRequest) returns (PlayerPositionResponse) {}
+}
+
+// Message service for handling game messages
+service MessageService {
+  // Send a chat message
+  rpc SendChat(ChatRequest) returns (ChatResponse) {}
+  
+  // Stream for receiving game events
+  rpc ReceiveEvents(HeartbeatRequest) returns (stream PositionSyncResponse) {}
+} 

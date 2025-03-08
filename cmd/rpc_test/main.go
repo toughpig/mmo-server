@@ -22,11 +22,15 @@ func main() {
 	concurrentClients := flag.Int("clients", 10, "Number of concurrent clients in concurrent test mode")
 	interval := flag.Int("interval", 100, "Interval between requests in milliseconds")
 	timeout := flag.Int("timeout", 5000, "Request timeout in milliseconds")
+	transport := flag.String("transport", string(rpc.DefaultTransport), "Transport type: 'shmipc' or 'grpc'")
 	flag.Parse()
 
 	// Set up logging
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	log.Printf("Starting RPC test in %s mode, endpoint: %s", *mode, *endpoint)
+	log.Printf("Starting RPC test in %s mode, endpoint: %s, transport: %s", *mode, *endpoint, *transport)
+
+	// Convert transport string to TransportType
+	transportType := rpc.TransportType(*transport)
 
 	// Handle signals for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -40,7 +44,7 @@ func main() {
 
 	case "server":
 		// Create and start an RPC server
-		server := rpc.NewShmIPCServer(*endpoint)
+		server := rpc.NewRPCServer(*endpoint, transportType)
 
 		// Register the example service
 		service := &rpc.PlayerService{}
@@ -49,12 +53,10 @@ func main() {
 			log.Fatalf("Failed to register service: %v", err)
 		}
 
-		// Remove existing socket file if it exists
-		if _, err := os.Stat(*endpoint); err == nil {
-			log.Printf("Removing existing socket file: %s", *endpoint)
-			if err := os.Remove(*endpoint); err != nil {
-				log.Fatalf("Failed to remove existing socket file: %v", err)
-			}
+		// Prepare the endpoint
+		err = rpc.PrepareEndpoint(*endpoint, transportType)
+		if err != nil {
+			log.Fatalf("Failed to prepare endpoint: %v", err)
 		}
 
 		// Start the server
@@ -72,7 +74,7 @@ func main() {
 
 	case "client":
 		// Create a client
-		client, err := rpc.NewShmIPCClient(*endpoint)
+		client, err := rpc.NewRPCClient(*endpoint, transportType)
 		if err != nil {
 			log.Fatalf("Failed to create client: %v", err)
 		}
@@ -121,7 +123,7 @@ func main() {
 		log.Printf("Starting stress test with %d requests...", *requestCount)
 
 		// Create a client
-		client, err := rpc.NewShmIPCClient(*endpoint)
+		client, err := rpc.NewRPCClient(*endpoint, transportType)
 		if err != nil {
 			log.Fatalf("Failed to create client: %v", err)
 		}
@@ -181,7 +183,7 @@ func main() {
 		for c := 0; c < *concurrentClients; c++ {
 			go func(clientID int) {
 				// Create a client
-				client, err := rpc.NewShmIPCClient(*endpoint)
+				client, err := rpc.NewRPCClient(*endpoint, transportType)
 				if err != nil {
 					log.Printf("Client %d: Failed to create client: %v", clientID, err)
 					for i := 0; i < *requestCount; i++ {
@@ -250,7 +252,7 @@ func main() {
 		log.Println("Starting error handling test...")
 
 		// Create a client
-		client, err := rpc.NewShmIPCClient(*endpoint)
+		client, err := rpc.NewRPCClient(*endpoint, transportType)
 		if err != nil {
 			log.Fatalf("Failed to create client: %v", err)
 		}

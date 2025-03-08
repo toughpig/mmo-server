@@ -176,40 +176,49 @@ func (s *PlayerService) GetPlayerPosition(ctx context.Context, req *pb.PlayerPos
 	return nil
 }
 
-// StartExample demonstrates using the RPC framework with our example service
+// StartExample starts a simple example that demonstrates both server and client
 func StartExample() {
-	// Set up a server
-	socketPath := "/tmp/mmo-rpc-example.sock"
-	server := NewShmIPCServer(socketPath)
+	// Create a gRPC endpoint
+	endpoint := "localhost:50051"
 
-	// Register the PlayerService
+	// Create and start a server
+	server := NewRPCServer(endpoint, DefaultTransport)
+
+	// Register the example service
 	service := &PlayerService{}
 	err := server.Register(service)
 	if err != nil {
 		log.Fatalf("Failed to register service: %v", err)
 	}
 
+	// Prepare the endpoint
+	err = PrepareEndpoint(endpoint, DefaultTransport)
+	if err != nil {
+		log.Fatalf("Failed to prepare endpoint: %v", err)
+	}
+
 	// Start the server
-	go func() {
-		if err := server.Start(); err != nil {
-			log.Printf("Server error: %v", err)
-		}
-	}()
-
-	log.Println("Server started. Press Ctrl+C to exit.")
-
-	// This would normally be in a separate process
-	log.Println("Starting example client...")
-
-	// Wait a moment for the server to start
-	time.Sleep(500 * time.Millisecond)
+	err = server.Start()
+	if err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+	defer server.Stop()
 
 	// Create a client
-	client, err := NewShmIPCClient(socketPath)
+	client, err := NewRPCClient(endpoint, DefaultTransport)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 	defer client.Close()
+
+	// Create a direct PlayerService client
+	playerClient, err := GetPlayerServiceClient(endpoint)
+	if err != nil {
+		log.Fatalf("Failed to create player service client: %v", err)
+	}
+
+	// 注意：playerClient 由连接管理器管理，不需要手动关闭
+	// 在程序结束时，连接管理器会自动清理所有连接
 
 	// Call GetPlayerInfo
 	loginReq := &pb.LoginRequest{
@@ -237,46 +246,32 @@ func StartExample() {
 			loginResp.UserId, loginResp.Token, loginResp.UserInfo.Nickname)
 	}
 
-	// Call SyncPlayerPosition
-	posReq := &pb.PositionSyncRequest{
-		EntityId: "player123",
-		Position: &pb.Position{
+	// Example of using the direct gRPC client
+	posReq := &pb.PlayerPositionRequest{
+		PlayerId: "player123",
+		Position: &pb.Vector3{
 			X: 100.0,
 			Y: 0.0,
 			Z: 50.0,
 		},
-		Velocity: &pb.Vector3{
-			X: 1.0,
-			Y: 0.0,
-			Z: 0.5,
+		Rotation: &pb.Vector3{
+			X: 0.0,
+			Y: 45.0,
+			Z: 0.0,
 		},
-		Rotation:  90.0,
-		Timestamp: 1615471200000,
-		Header: &pb.MessageHeader{
-			MsgId:      int32(pb.MessageType_POSITION_SYNC_REQUEST),
-			Timestamp:  1615471200000,
-			SessionId:  "session-123",
-			Version:    1,
-			ResultCode: 0,
-			ResultMsg:  "",
-		},
+		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
-	posResp := &pb.PositionSyncResponse{}
 
-	err = client.Call(ctx, "PlayerService.SyncPlayerPosition", posReq, posResp)
+	posResp, err := playerClient.UpdatePosition(ctx, posReq)
 	if err != nil {
-		log.Printf("SyncPlayerPosition error: %v", err)
+		log.Printf("UpdatePosition error: %v", err)
 	} else {
-		log.Printf("SyncPlayerPosition response: success=%v, nearby_entities=%d",
-			posResp.Success, len(posResp.NearbyEntities))
-		for i, entity := range posResp.NearbyEntities {
-			log.Printf("Nearby entity %d: id=%s, type=%s, position=(%f,%f,%f)",
-				i+1, entity.EntityId, entity.EntityType,
-				entity.Position.X, entity.Position.Y, entity.Position.Z)
-		}
+		log.Printf("UpdatePosition response: success=%v, timestamp=%d",
+			posResp.Success, posResp.Timestamp)
 	}
 
-	// Stop the server
-	server.Stop()
+	// 在测试结束时清理连接
+	DefaultConnManager.CloseAll()
+
 	log.Println("Example completed.")
 }

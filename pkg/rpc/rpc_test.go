@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"math/rand"
 	"sync"
 	"testing"
 	"time"
@@ -69,16 +69,11 @@ func (s *ErrorService) ErrorMethod(ctx context.Context, req *pb.ChatRequest, res
 
 // TestRPCBasicFunctionality 测试RPC的基本功能
 func TestRPCBasicFunctionality(t *testing.T) {
-	// 在CI环境中跳过此测试，因为shmipc需要特定的环境配置
-	t.Skip("在CI环境中跳过，需要特定的shmipc配置")
-
-	socketPath := fmt.Sprintf("/tmp/mmo-rpc-test-%d.sock", time.Now().UnixNano())
-
-	// 确保测试前删除可能存在的socket文件
-	os.Remove(socketPath)
+	// Unix socket不再适用于gRPC，切换为TCP
+	tcpAddress := fmt.Sprintf("localhost:%d", 50100+rand.Intn(1000))
 
 	// 创建服务器
-	server := NewShmIPCServer(socketPath)
+	server := NewRPCServer(tcpAddress, TransportGRPC)
 
 	// 注册测试服务
 	testService := &TestService{}
@@ -94,7 +89,7 @@ func TestRPCBasicFunctionality(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// 创建客户端
-	client, err := NewShmIPCClient(socketPath)
+	client, err := NewRPCClient(tcpAddress, TransportGRPC)
 	require.NoError(t, err, "无法创建RPC客户端")
 	defer client.Close()
 
@@ -136,16 +131,11 @@ func TestRPCBasicFunctionality(t *testing.T) {
 
 // TestRPCMultipleCalls 测试多次RPC调用
 func TestRPCMultipleCalls(t *testing.T) {
-	// 在CI环境中跳过此测试，因为shmipc需要特定的环境配置
-	t.Skip("在CI环境中跳过，需要特定的shmipc配置")
-
-	socketPath := fmt.Sprintf("/tmp/mmo-rpc-test-%d.sock", time.Now().UnixNano())
-
-	// 确保测试前删除可能存在的socket文件
-	os.Remove(socketPath)
+	// Unix socket不再适用于gRPC，切换为TCP
+	tcpAddress := fmt.Sprintf("localhost:%d", 50100+rand.Intn(1000))
 
 	// 创建服务器
-	server := NewShmIPCServer(socketPath)
+	server := NewRPCServer(tcpAddress, TransportGRPC)
 
 	// 注册测试服务
 	testService := &TestService{}
@@ -161,7 +151,7 @@ func TestRPCMultipleCalls(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// 创建客户端
-	client, err := NewShmIPCClient(socketPath)
+	client, err := NewRPCClient(tcpAddress, TransportGRPC)
 	require.NoError(t, err, "无法创建RPC客户端")
 	defer client.Close()
 
@@ -201,16 +191,11 @@ func TestRPCMultipleCalls(t *testing.T) {
 
 // TestRPCTimeout 测试RPC超时
 func TestRPCTimeout(t *testing.T) {
-	// 在CI环境中跳过此测试，因为shmipc需要特定的环境配置
-	t.Skip("在CI环境中跳过，需要特定的shmipc配置")
-
-	socketPath := fmt.Sprintf("/tmp/mmo-rpc-test-%d.sock", time.Now().UnixNano())
-
-	// 确保测试前删除可能存在的socket文件
-	os.Remove(socketPath)
+	// Unix socket不再适用于gRPC，切换为TCP
+	tcpAddress := fmt.Sprintf("localhost:%d", 50100+rand.Intn(1000))
 
 	// 创建服务器
-	server := NewShmIPCServer(socketPath)
+	server := NewRPCServer(tcpAddress, TransportGRPC)
 
 	// 注册一个会休眠的服务，以触发超时
 	slowService := &SlowService{}
@@ -226,7 +211,7 @@ func TestRPCTimeout(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// 创建客户端
-	client, err := NewShmIPCClient(socketPath)
+	client, err := NewRPCClient(tcpAddress, TransportGRPC)
 	require.NoError(t, err, "无法创建RPC客户端")
 	defer client.Close()
 
@@ -254,16 +239,11 @@ func TestRPCTimeout(t *testing.T) {
 
 // TestRPCConcurrentCalls 测试并发RPC调用
 func TestRPCConcurrentCalls(t *testing.T) {
-	// 在CI环境中跳过此测试，因为shmipc需要特定的环境配置
-	t.Skip("在CI环境中跳过，需要特定的shmipc配置")
-
-	socketPath := fmt.Sprintf("/tmp/mmo-rpc-test-%d.sock", time.Now().UnixNano())
-
-	// 确保测试前删除可能存在的socket文件
-	os.Remove(socketPath)
+	// Unix socket不再适用于gRPC，切换为TCP
+	tcpAddress := fmt.Sprintf("localhost:%d", 50100+rand.Intn(1000))
 
 	// 创建服务器
-	server := NewShmIPCServer(socketPath)
+	server := NewRPCServer(tcpAddress, TransportGRPC)
 
 	// 注册测试服务
 	testService := &TestService{}
@@ -279,7 +259,7 @@ func TestRPCConcurrentCalls(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// 创建客户端
-	client, err := NewShmIPCClient(socketPath)
+	client, err := NewRPCClient(tcpAddress, TransportGRPC)
 	require.NoError(t, err, "无法创建RPC客户端")
 	defer client.Close()
 
@@ -331,16 +311,11 @@ func TestRPCConcurrentCalls(t *testing.T) {
 
 // TestRPCServiceError 测试服务错误处理
 func TestRPCServiceError(t *testing.T) {
-	// 在CI环境中跳过此测试，因为shmipc需要特定的环境配置
-	t.Skip("在CI环境中跳过，需要特定的shmipc配置")
-
-	socketPath := fmt.Sprintf("/tmp/mmo-rpc-test-%d.sock", time.Now().UnixNano())
-
-	// 确保测试前删除可能存在的socket文件
-	os.Remove(socketPath)
+	// Unix socket不再适用于gRPC，切换为TCP
+	tcpAddress := fmt.Sprintf("localhost:%d", 50100+rand.Intn(1000))
 
 	// 创建服务器
-	server := NewShmIPCServer(socketPath)
+	server := NewRPCServer(tcpAddress, TransportGRPC)
 
 	// 注册一个会返回错误的服务
 	errorService := &ErrorService{}
@@ -356,7 +331,7 @@ func TestRPCServiceError(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// 创建客户端
-	client, err := NewShmIPCClient(socketPath)
+	client, err := NewRPCClient(tcpAddress, TransportGRPC)
 	require.NoError(t, err, "无法创建RPC客户端")
 	defer client.Close()
 
@@ -384,16 +359,11 @@ func TestRPCServiceError(t *testing.T) {
 
 // TestRPCInvalidService 测试调用不存在的服务
 func TestRPCInvalidService(t *testing.T) {
-	// 在CI环境中跳过此测试，因为shmipc需要特定的环境配置
-	t.Skip("在CI环境中跳过，需要特定的shmipc配置")
-
-	socketPath := fmt.Sprintf("/tmp/mmo-rpc-test-%d.sock", time.Now().UnixNano())
-
-	// 确保测试前删除可能存在的socket文件
-	os.Remove(socketPath)
+	// Unix socket不再适用于gRPC，切换为TCP
+	tcpAddress := fmt.Sprintf("localhost:%d", 50100+rand.Intn(1000))
 
 	// 创建服务器
-	server := NewShmIPCServer(socketPath)
+	server := NewRPCServer(tcpAddress, TransportGRPC)
 
 	// 注册测试服务
 	testService := &TestService{}
@@ -409,7 +379,7 @@ func TestRPCInvalidService(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// 创建客户端
-	client, err := NewShmIPCClient(socketPath)
+	client, err := NewRPCClient(tcpAddress, TransportGRPC)
 	require.NoError(t, err, "无法创建RPC客户端")
 	defer client.Close()
 

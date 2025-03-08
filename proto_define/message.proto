@@ -4,6 +4,8 @@ package proto_define;
 
 option go_package = "mmo-server/proto_define";
 
+import "google/protobuf/any.proto";
+
 // 消息头，所有消息都必须包含这个头部
 message MessageHeader {
   int32 msg_id = 1;       // 消息ID
@@ -171,7 +173,7 @@ enum ChatType {
 message RPCRequest {
   string service_method = 1; // 服务方法名 "Service.Method"
   uint64 sequence = 2;       // 请求序列号
-  bytes args_data = 3;       // 序列化的参数数据
+  google.protobuf.Any args = 3;  // 参数，使用Any类型包装
 }
 
 // RPC响应
@@ -179,7 +181,7 @@ message RPCResponse {
   string service_method = 1; // 服务方法名 "Service.Method"
   uint64 sequence = 2;       // 请求序列号
   string error = 3;          // 错误信息，如果有
-  bytes reply_data = 4;      // 序列化的响应数据
+  google.protobuf.Any reply = 4;  // 响应，使用Any类型包装
 }
 
 // 消息枚举，用于标识不同的消息类型

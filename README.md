@@ -6,7 +6,7 @@
 
 - Golang: 主要开发语言
 - Protobuf: 用于定义通信协议
-- shmipc-go: 高性能进程间通信
+- gRPC: 高性能服务间通信
 - Redis: 用于缓存和消息队列
 - PostgreSQL: 持久化数据存储
 - AES-GCM: 安全加密通信
@@ -25,7 +25,7 @@
   - `protocol/`: 协议转换和路由
   - `security/`: 安全加密组件
   - `config/`: 配置管理
-  - `rpc/`: 基于shmipc-go的RPC框架
+  - `rpc/`: 基于gRPC的RPC框架
   - `sync/`: 玩家状态同步模块
   - `aoi/`: 兴趣区域系统
 - `internal/`: 内部包
@@ -37,7 +37,7 @@
   - `protocol_test/`: 协议测试工具
   - `secure_ws_client/`: 安全WebSocket客户端
   - `load_test/`: 负载测试工具
-  - `rpc_test/`: RPC框架测试工具
+  - `grpc_test/`: gRPC框架测试工具
   - `sync_test/`: 状态同步测试工具
   - `aoi_test/`: AOI系统测试工具
 - `config/`: 配置文件
@@ -67,19 +67,19 @@ chmod +x test.sh
 
 测试结果会保存在`test_results.log`文件中，覆盖率报告会生成为`coverage.html`。
 
-### RPC框架测试
+### gRPC框架测试
 
-RPC框架有专门的测试工具，可以通过以下命令运行：
+gRPC框架有专门的测试工具，可以通过以下命令运行：
 
 ```bash
-# 运行RPC框架示例测试
-./bin/rpc_test -mode=example
+# 构建gRPC测试工具
+./build-grpc-test.sh
 
 # 运行服务器模式
-./bin/rpc_test -mode=server -endpoint=/tmp/my-test-socket.sock
+./bin/grpc-test -mode=server -endpoint=localhost:50051
 
 # 运行客户端模式
-./bin/rpc_test -mode=client -endpoint=/tmp/my-test-socket.sock
+./bin/grpc-test -mode=client -endpoint=localhost:50051
 ```
 
 ### 玩家状态同步测试
@@ -111,7 +111,7 @@ RPC框架有专门的测试工具，可以通过以下命令运行：
    - 会话管理和认证
 
 2. **逻辑服务进程**
-   - 基于shmipc-go的高性能RPC框架
+   - 基于gRPC的高性能RPC框架
    - 玩家状态同步模块
    - 基础AOI（兴趣区域）系统
 
@@ -136,15 +136,31 @@ RPC框架有专门的测试工具，可以通过以下命令运行：
 
 ## RPC框架
 
-框架基于shmipc-go实现了高性能的进程间通信机制，支持：
+框架基于gRPC实现了高性能的服务间通信机制，支持：
 
 - 服务自动注册和发现
 - 双向通信
 - 上下文支持（超时和取消）
 - 异步调用
-- 协议无关（支持Protobuf和其他序列化格式）
+- 丰富的工具支持
+- 跨平台兼容性
 
-更多详情请参阅 [RPC框架文档](pkg/rpc/README.md)
+更多详情请参阅 [gRPC框架文档](README-GRPC.md)
+
+## 服务发现与负载均衡
+
+服务发现和负载均衡模块为分布式部署提供了强大的支持：
+
+- 自动服务注册和实例发现
+- 多种负载均衡策略（随机、轮询、加权）
+- 健康检查和自动故障转移
+- 服务状态变化监控
+- 高效连接池管理
+- 可扩展的插件架构（支持外部服务注册系统集成）
+
+该模块使得服务可以轻松扩展、部署和管理，特别适合大规模MMO游戏服务。
+
+更多详情请参阅 [服务发现与负载均衡文档](README-SERVICE-DISCOVERY.md)
 
 ## 贡献指南
 

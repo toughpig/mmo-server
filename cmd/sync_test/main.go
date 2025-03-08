@@ -42,7 +42,7 @@ func main() {
 	switch *mode {
 	case "server":
 		// 创建并启动RPC服务器
-		server := rpc.NewShmIPCServer(*endpoint)
+		server := rpc.NewRPCServer(*endpoint, rpc.TransportGRPC)
 
 		// 创建玩家状态管理器
 		playerStateManager := syncpkg.NewPlayerStateManager()
@@ -85,7 +85,7 @@ func main() {
 
 	case "client":
 		// 创建RPC客户端
-		client, err := rpc.NewShmIPCClient(*endpoint)
+		client, err := rpc.NewRPCClient(*endpoint, rpc.TransportGRPC)
 		if err != nil {
 			log.Fatalf("无法创建客户端：%v", err)
 		}
@@ -193,12 +193,9 @@ func runExampleTest() {
 	broadcastService := syncpkg.NewBroadcastService(playerStateManager)
 
 	// 创建并启动服务器
-	socketPath := "/tmp/mmo-sync-example.sock"
-	if _, err := os.Stat(socketPath); err == nil {
-		os.Remove(socketPath)
-	}
+	socketPath := "localhost:50060"
 
-	server := rpc.NewShmIPCServer(socketPath)
+	server := rpc.NewRPCServer(socketPath, rpc.TransportGRPC)
 	server.Register(syncService)
 	server.Register(broadcastService)
 	server.Start()
@@ -227,7 +224,7 @@ func runExampleTest() {
 	for i := 1; i <= 5; i++ {
 		go func(clientID int) {
 			defer wg.Done()
-			client, err := rpc.NewShmIPCClient(socketPath)
+			client, err := rpc.NewRPCClient(socketPath, rpc.TransportGRPC)
 			if err != nil {
 				log.Printf("无法创建RPC客户端 %d：%v", clientID, err)
 				return
