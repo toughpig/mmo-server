@@ -1,4 +1,4 @@
-module github.com/yourusername/mmo-server
+module github.com/toughpig/mmo-server
 
 go 1.23.0
 

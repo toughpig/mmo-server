@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/yourusername/mmo-server/pkg/security"
+	"github.com/toughpig/mmo-server/pkg/security"
 )
 
 // MessageType 消息类型

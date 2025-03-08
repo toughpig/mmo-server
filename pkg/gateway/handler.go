@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/quic-go/quic-go"
 
-	"github.com/yourusername/mmo-server/pkg/protocol"
+	"github.com/toughpig/mmo-server/pkg/protocol"
 )
 
 // GatewayHandler 网关处理器，负责处理来自不同协议的连接和消息

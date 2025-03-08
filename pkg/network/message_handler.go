@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/toughpig/mmo-server/proto"
 	"google.golang.org/protobuf/proto"
-	"github.com/yourusername/mmo-server/proto"
 )
 
 // MessageProcessor 处理所有类型的消息
@@ -19,14 +19,14 @@ func NewMessageProcessor(server *Server) *MessageProcessor {
 	processor := &MessageProcessor{
 		server: server,
 	}
-	
+
 	// 注册消息处理函数
 	server.RegisterHandler(int32(proto.MessageType_LOGIN_REQUEST), processor.HandleLoginRequest)
 	server.RegisterHandler(int32(proto.MessageType_HEARTBEAT_REQUEST), processor.HandleHeartbeatRequest)
 	server.RegisterHandler(int32(proto.MessageType_POSITION_SYNC_REQUEST), processor.HandlePositionSyncRequest)
 	server.RegisterHandler(int32(proto.MessageType_CHAT_REQUEST), processor.HandleChatRequest)
 	server.RegisterHandler(int32(proto.MessageType_COMBAT_COMMAND_REQUEST), processor.HandleCombatCommandRequest)
-	
+
 	return processor
 }
 
@@ -48,9 +48,9 @@ func (p *MessageProcessor) HandleLoginRequest(client *Client, message []byte) er
 	if err := proto.Unmarshal(message[4:], &request); err != nil {
 		return fmt.Errorf("unmarshal login request error: %w", err)
 	}
-	
+
 	log.Printf("Received login request from user: %s", request.Username)
-	
+
 	// 验证登录并生成响应
 	// 在实际应用中，应该验证用户名密码，生成令牌等
 	response := &proto.LoginResponse{
@@ -77,13 +77,13 @@ func (p *MessageProcessor) HandleLoginRequest(client *Client, message []byte) er
 			MaxOnlineCount: 1000,
 		},
 	}
-	
+
 	// 序列化并发送响应
 	responseData, err := proto.Marshal(response)
 	if err != nil {
 		return fmt.Errorf("marshal login response error: %w", err)
 	}
-	
+
 	// 添加消息ID（前4个字节）
 	msgIDBytes := []byte{
 		byte(proto.MessageType_LOGIN_RESPONSE >> 24),
@@ -91,7 +91,7 @@ func (p *MessageProcessor) HandleLoginRequest(client *Client, message []byte) er
 		byte(proto.MessageType_LOGIN_RESPONSE >> 8),
 		byte(proto.MessageType_LOGIN_RESPONSE),
 	}
-	
+
 	fullResponse := append(msgIDBytes, responseData...)
 	return client.SendMessage(fullResponse)
 }
@@ -102,21 +102,21 @@ func (p *MessageProcessor) HandleHeartbeatRequest(client *Client, message []byte
 	if err := proto.Unmarshal(message[4:], &request); err != nil {
 		return fmt.Errorf("unmarshal heartbeat request error: %w", err)
 	}
-	
+
 	response := &proto.HeartbeatResponse{
 		Header:     createResponseHeader(request.Header, int32(proto.MessageType_HEARTBEAT_RESPONSE)),
 		ServerTime: time.Now().UnixNano() / 1e6, // 毫秒
 	}
-	
+
 	// 更新客户端最后心跳时间
 	client.lastPing = time.Now()
-	
+
 	// 序列化并发送响应
 	responseData, err := proto.Marshal(response)
 	if err != nil {
 		return fmt.Errorf("marshal heartbeat response error: %w", err)
 	}
-	
+
 	// 添加消息ID
 	msgIDBytes := []byte{
 		byte(proto.MessageType_HEARTBEAT_RESPONSE >> 24),
@@ -124,7 +124,7 @@ func (p *MessageProcessor) HandleHeartbeatRequest(client *Client, message []byte
 		byte(proto.MessageType_HEARTBEAT_RESPONSE >> 8),
 		byte(proto.MessageType_HEARTBEAT_RESPONSE),
 	}
-	
+
 	fullResponse := append(msgIDBytes, responseData...)
 	return client.SendMessage(fullResponse)
 }
@@ -135,7 +135,7 @@ func (p *MessageProcessor) HandlePositionSyncRequest(client *Client, message []b
 	if err := proto.Unmarshal(message[4:], &request); err != nil {
 		return fmt.Errorf("unmarshal position sync request error: %w", err)
 	}
-	
+
 	// 处理位置更新，在实际应用中应该更新实体位置并执行碰撞检测等
 	log.Printf("Entity %s updated position to (%f, %f, %f)",
 		request.EntityId,
@@ -143,7 +143,7 @@ func (p *MessageProcessor) HandlePositionSyncRequest(client *Client, message []b
 		request.Position.Y,
 		request.Position.Z,
 	)
-	
+
 	// 创建响应，包含附近实体位置
 	response := &proto.PositionSyncResponse{
 		Header:  createResponseHeader(request.Header, int32(proto.MessageType_POSITION_SYNC_RESPONSE)),
@@ -163,13 +163,13 @@ func (p *MessageProcessor) HandlePositionSyncRequest(client *Client, message []b
 			},
 		},
 	}
-	
+
 	// 序列化并发送响应
 	responseData, err := proto.Marshal(response)
 	if err != nil {
 		return fmt.Errorf("marshal position sync response error: %w", err)
 	}
-	
+
 	// 添加消息ID
 	msgIDBytes := []byte{
 		byte(proto.MessageType_POSITION_SYNC_RESPONSE >> 24),
@@ -177,7 +177,7 @@ func (p *MessageProcessor) HandlePositionSyncRequest(client *Client, message []b
 		byte(proto.MessageType_POSITION_SYNC_RESPONSE >> 8),
 		byte(proto.MessageType_POSITION_SYNC_RESPONSE),
 	}
-	
+
 	fullResponse := append(msgIDBytes, responseData...)
 	return client.SendMessage(fullResponse)
 }
@@ -188,9 +188,9 @@ func (p *MessageProcessor) HandleChatRequest(client *Client, message []byte) err
 	if err := proto.Unmarshal(message[4:], &request); err != nil {
 		return fmt.Errorf("unmarshal chat request error: %w", err)
 	}
-	
+
 	log.Printf("Chat message from %s: %s", request.SenderName, request.Content)
-	
+
 	// 创建响应
 	response := &proto.ChatResponse{
 		Header:    createResponseHeader(request.Header, int32(proto.MessageType_CHAT_RESPONSE)),
@@ -198,7 +198,7 @@ func (p *MessageProcessor) HandleChatRequest(client *Client, message []byte) err
 		MessageId: time.Now().UnixNano(),
 		Timestamp: time.Now().Unix(),
 	}
-	
+
 	// 根据聊天类型处理消息
 	switch request.ChatType {
 	case proto.ChatType_WORLD:
@@ -208,28 +208,28 @@ func (p *MessageProcessor) HandleChatRequest(client *Client, message []byte) err
 		if err != nil {
 			return fmt.Errorf("marshal chat broadcast error: %w", err)
 		}
-		
+
 		msgIDBytes := []byte{
 			byte(proto.MessageType_CHAT_REQUEST >> 24),
 			byte(proto.MessageType_CHAT_REQUEST >> 16),
 			byte(proto.MessageType_CHAT_REQUEST >> 8),
 			byte(proto.MessageType_CHAT_REQUEST),
 		}
-		
+
 		fullBroadcast := append(msgIDBytes, broadcastData...)
 		p.server.Broadcast(fullBroadcast)
-		
+
 	case proto.ChatType_PRIVATE:
 		// 在实际应用中，应该发送给指定用户
 		log.Printf("Private message to %s", request.TargetId)
 	}
-	
+
 	// 序列化并发送响应
 	responseData, err := proto.Marshal(response)
 	if err != nil {
 		return fmt.Errorf("marshal chat response error: %w", err)
 	}
-	
+
 	// 添加消息ID
 	msgIDBytes := []byte{
 		byte(proto.MessageType_CHAT_RESPONSE >> 24),
@@ -237,7 +237,7 @@ func (p *MessageProcessor) HandleChatRequest(client *Client, message []byte) err
 		byte(proto.MessageType_CHAT_RESPONSE >> 8),
 		byte(proto.MessageType_CHAT_RESPONSE),
 	}
-	
+
 	fullResponse := append(msgIDBytes, responseData...)
 	return client.SendMessage(fullResponse)
 }
@@ -248,13 +248,13 @@ func (p *MessageProcessor) HandleCombatCommandRequest(client *Client, message []
 	if err := proto.Unmarshal(message[4:], &request); err != nil {
 		return fmt.Errorf("unmarshal combat command request error: %w", err)
 	}
-	
+
 	log.Printf("Combat command from %s to %s using skill %d",
 		request.AttackerId,
 		request.TargetId,
 		request.SkillId,
 	)
-	
+
 	// 创建响应，模拟战斗结果
 	response := &proto.CombatCommandResponse{
 		Header:  createResponseHeader(request.Header, int32(proto.MessageType_COMBAT_COMMAND_RESPONSE)),
@@ -277,13 +277,13 @@ func (p *MessageProcessor) HandleCombatCommandRequest(client *Client, message []
 			},
 		},
 	}
-	
+
 	// 序列化并发送响应
 	responseData, err := proto.Marshal(response)
 	if err != nil {
 		return fmt.Errorf("marshal combat command response error: %w", err)
 	}
-	
+
 	// 添加消息ID
 	msgIDBytes := []byte{
 		byte(proto.MessageType_COMBAT_COMMAND_RESPONSE >> 24),
@@ -291,7 +291,7 @@ func (p *MessageProcessor) HandleCombatCommandRequest(client *Client, message []
 		byte(proto.MessageType_COMBAT_COMMAND_RESPONSE >> 8),
 		byte(proto.MessageType_COMBAT_COMMAND_RESPONSE),
 	}
-	
+
 	fullResponse := append(msgIDBytes, responseData...)
 	return client.SendMessage(fullResponse)
-} 
+}

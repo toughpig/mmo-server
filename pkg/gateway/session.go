@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/quic-go/quic-go"
 
-	"github.com/yourusername/mmo-server/pkg/protocol"
+	"github.com/toughpig/mmo-server/pkg/protocol"
 )
 
 // SessionState 表示会话状态

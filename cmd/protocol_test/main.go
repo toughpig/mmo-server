@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/yourusername/mmo-server/pkg/protocol"
+	"github.com/toughpig/mmo-server/pkg/protocol"
 )
 
 // 测试处理器实现

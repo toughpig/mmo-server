@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/yourusername/mmo-server/pkg/security"
+	"github.com/toughpig/mmo-server/pkg/security"
 )
 
 // SecureConnectionHandler 安全连接处理器

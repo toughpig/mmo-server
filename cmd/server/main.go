@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/yourusername/mmo-server/pkg/config"
-	"github.com/yourusername/mmo-server/pkg/network"
+	"github.com/toughpig/mmo-server/pkg/config"
+	"github.com/toughpig/mmo-server/pkg/network"
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 
 	// 创建服务器
 	server := network.NewServer(cfg)
-	
+
 	// 创建消息处理器
 	network.NewMessageProcessor(server)
 
@@ -46,4 +46,4 @@ func main() {
 	log.Println("Shutting down...")
 	server.Stop()
 	log.Println("Server shutdown complete.")
-} 
+}
