@@ -47,25 +47,27 @@
 - `pkg/protocol/router_test.go`: 消息路由器单元测试
 - `pkg/protocol/handler_registry_test.go`: 处理器注册表单元测试
 
-### 3. 基于shmipc-go的RPC框架
+### 3. 基于gRPC的RPC框架
 
-✅ 完成 - 参见 [RPC框架文档](../pkg/rpc/README.md)
+✅ 完成 - 参见 [gRPC框架文档](../README-GRPC.md)
 
-- 集成shmipc-go库，提供高性能进程间通信
+- 集成gRPC库，提供高性能跨服务通信
 - 创建服务注册和发现系统
 - 实现客户端负载均衡
 - 添加错误处理和重试机制
 - 支持上下文传递和超时控制
 - 实现双向通信
+- 实现直接服务访问接口
 - 开发示例服务和测试工具
 
 关键文件：
-- `pkg/rpc/shmipc_server.go`: 服务器端实现
-- `pkg/rpc/shmipc_client.go`: 客户端实现
+- `pkg/rpc/grpc_server.go`: 服务器端实现
+- `pkg/rpc/grpc_client.go`: 客户端实现
 - `pkg/rpc/rpc.go`: 核心接口和数据类型定义
-- `pkg/rpc/protocol.go`: 消息协议实现
+- `pkg/rpc/factory.go`: 工厂模式实现
 - `pkg/rpc/example_service.go`: 示例服务和测试工具
-- `cmd/rpc_test/main.go`: RPC框架测试工具
+- `cmd/grpc_test/main.go`: gRPC框架测试工具
+- `proto_define/rpc_service.proto`: gRPC服务定义
 
 ### 4. 玩家状态同步模块
 
