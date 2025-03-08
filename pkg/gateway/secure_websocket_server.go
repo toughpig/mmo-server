@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"mmo-server/pkg/security"
+
 	"github.com/gorilla/websocket"
-	"github.com/toughpig/mmo-server/pkg/security"
 )
 
 // SecureConnectionHandler 安全连接处理器

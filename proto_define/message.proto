@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package proto;
+package proto_define;
 
-option go_package = "github.com/toughpig/mmo-server/proto";
+option go_package = "mmo-server/proto_define";
 
 // 消息头，所有消息都必须包含这个头部
 message MessageHeader {

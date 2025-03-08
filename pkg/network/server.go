@@ -9,8 +9,9 @@ import (
 	"sync"
 	"time"
 
+	"mmo-server/pkg/config"
+
 	"github.com/gorilla/websocket"
-	"github.com/toughpig/mmo-server/pkg/config"
 )
 
 // Server 表示游戏服务器
@@ -23,6 +24,7 @@ type Server struct {
 	upgrader    websocket.Upgrader
 	ctx         context.Context
 	cancel      context.CancelFunc
+	httpServer  *http.Server
 }
 
 // Client 表示连接的客户端
@@ -64,40 +66,47 @@ func NewServer(cfg *config.Config) *Server {
 // Start 启动服务器
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%d", s.config.Server.Host, s.config.Server.Port)
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		return fmt.Errorf("failed to start server: %w", err)
-	}
 
-	s.listener = listener
-	log.Printf("Server started on %s", addr)
+	// 创建HTTP服务器用于WebSocket连接
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", s.handleWebSocket)
+
+	s.httpServer = &http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
 
 	// 启动心跳检测
 	go s.heartbeatChecker()
 
-	// 主服务循环
-	for {
-		select {
-		case <-s.ctx.Done():
-			return nil
-		default:
-			conn, err := listener.Accept()
-			if err != nil {
-				log.Printf("Error accepting connection: %v", err)
-				continue
-			}
+	log.Printf("Server started on %s", addr)
+	return s.httpServer.ListenAndServe()
+}
 
-			// 创建客户端并启动处理
-			client := s.newClient(conn)
-			go client.readPump()
-			go client.writePump()
-		}
+// handleWebSocket 处理WebSocket连接请求
+func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	wsConn, err := s.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("Failed to upgrade connection: %v", err)
+		return
+	}
+
+	// 创建客户端并启动处理
+	client := s.newClientFromWS(wsConn)
+	if client != nil {
+		go client.readPump()
+		go client.writePump()
 	}
 }
 
 // Stop 停止服务器
 func (s *Server) Stop() {
 	s.cancel()
+	if s.httpServer != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		s.httpServer.Shutdown(ctx)
+	}
 	if s.listener != nil {
 		s.listener.Close()
 	}
@@ -163,18 +172,10 @@ func (s *Server) checkHeartbeats() {
 	}
 }
 
-// newClient 创建新的客户端
-func (s *Server) newClient(conn net.Conn) *Client {
+// newClientFromWS 从WebSocket连接创建新的客户端
+func (s *Server) newClientFromWS(wsConn *websocket.Conn) *Client {
 	ctx, cancel := context.WithCancel(s.ctx)
 	clientID := generateID() // 生成唯一ID的函数
-
-	// 使用websocket升级连接
-	wsConn, err := s.upgrader.Upgrade(conn, nil, nil)
-	if err != nil {
-		log.Printf("Failed to upgrade connection: %v", err)
-		conn.Close()
-		return nil
-	}
 
 	client := &Client{
 		ID:       clientID,

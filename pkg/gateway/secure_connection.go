@@ -12,8 +12,9 @@ import (
 	"sync"
 	"time"
 
+	"mmo-server/pkg/security"
+
 	"github.com/gorilla/websocket"
-	"github.com/toughpig/mmo-server/pkg/security"
 )
 
 // MessageType 消息类型

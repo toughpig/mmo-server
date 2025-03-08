@@ -167,10 +167,26 @@ func (c *DefaultProtocolConverter) convertWebSocketToInternal(formatType FormatT
 			return nil, err
 		}
 
+		// Convert the payload
+		var payload []byte
+		if len(jsonMsg.Payload) > 0 {
+			// Check if the payload is a JSON string
+			var stringPayload string
+			if err := json.Unmarshal(jsonMsg.Payload, &stringPayload); err == nil {
+				// It's a JSON string, use it directly
+				payload = []byte(stringPayload)
+			} else {
+				// Use the raw payload
+				payload = jsonMsg.Payload
+			}
+		} else {
+			payload = []byte{}
+		}
+
 		msg := NewMessage(
 			ServiceType(jsonMsg.ServiceType),
 			MessageType(jsonMsg.MessageType),
-			[]byte(jsonMsg.Payload),
+			payload,
 		)
 		msg.Flags = jsonMsg.Flags
 		msg.SessionID = jsonMsg.SessionID
@@ -240,17 +256,31 @@ func (c *DefaultProtocolConverter) convertInternalToWebSocket(formatType FormatT
 	case FormatTypeJSON:
 		// 构建JSON格式
 		jsonMsg := struct {
-			ServiceType uint16 `json:"service_type"`
-			MessageType uint16 `json:"message_type"`
-			Flags       uint8  `json:"flags"`
-			Payload     []byte `json:"payload"`
-			SessionID   string `json:"session_id,omitempty"`
+			ServiceType uint16      `json:"service_type"`
+			MessageType uint16      `json:"message_type"`
+			Flags       uint8       `json:"flags"`
+			Payload     interface{} `json:"payload"`
+			SessionID   string      `json:"session_id,omitempty"`
 		}{
 			ServiceType: uint16(msg.ServiceType),
 			MessageType: uint16(msg.MessageType),
 			Flags:       msg.Flags,
-			Payload:     msg.Payload,
 			SessionID:   msg.SessionID,
+		}
+
+		// Convert payload based on its content
+		// If the payload is a valid string, use it directly
+		if len(msg.Payload) > 0 {
+			// Try to unmarshal as string first
+			var s string
+			if err := json.Unmarshal(msg.Payload, &s); err == nil {
+				jsonMsg.Payload = s
+			} else {
+				// Use raw bytes if not a valid string
+				jsonMsg.Payload = string(msg.Payload)
+			}
+		} else {
+			jsonMsg.Payload = ""
 		}
 
 		return json.Marshal(jsonMsg)

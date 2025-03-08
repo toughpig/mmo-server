@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/toughpig/mmo-server/pkg/gateway"
+	"mmo-server/pkg/gateway"
 )
 
 func main() {
