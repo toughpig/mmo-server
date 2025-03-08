@@ -1,0 +1,45 @@
+{
+  "session": {
+    "heartbeat_ttl_sec": 60,
+    "check_interval_sec": 10
+  },
+  "websocket": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 8081,
+    "path": "/ws",
+    "read_buffer_size": 4096,
+    "write_buffer_size": 4096,
+    "read_timeout_ms": 5000,
+    "write_timeout_ms": 5000,
+    "max_connections": 1000,
+    "handshake_timeout_ms": 5000,
+    "enable_encryption": true,
+    "key_rotation_interval_hours": 24
+  },
+  "quic": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 8082,
+    "max_connections": 1000,
+    "max_streams_per_conn": 100,
+    "idle_timeout_sec": 120,
+    "keep_alive_period_sec": 30,
+    "enable_encryption": true,
+    "key_rotation_interval_hours": 24
+  },
+  "metrics": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 9090,
+    "path": "/metrics"
+  },
+  "log": {
+    "level": "info",
+    "file": "logs/gateway.log",
+    "max_size_mb": 100,
+    "max_backups": 10,
+    "max_age_days": 30,
+    "compress": true
+  }
+} 

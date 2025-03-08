@@ -1,0 +1,44 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "max_connections": 5000,
+    "read_timeout_ms": 5000,
+    "write_timeout_ms": 5000,
+    "heartbeat_interval_sec": 30
+  },
+  "database": {
+    "driver": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "user": "mmo_user",
+    "password": "mmo_password",
+    "dbname": "mmo_db",
+    "max_open_conns": 100,
+    "max_idle_conns": 10,
+    "conn_max_lifetime_sec": 3600
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "password": "",
+    "db": 0,
+    "pool_size": 100,
+    "min_idle_conns": 10
+  },
+  "game": {
+    "world_size_x": 5000,
+    "world_size_y": 5000,
+    "position_sync_interval_ms": 100,
+    "max_players_per_zone": 100,
+    "zone_size": 500
+  },
+  "log": {
+    "level": "info",
+    "file": "logs/server.log",
+    "max_size_mb": 100,
+    "max_backups": 10,
+    "max_age_days": 30,
+    "compress": true
+  }
+} 

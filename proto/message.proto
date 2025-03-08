@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/yourusername/mmo-server/proto";
+
+// 消息头，所有消息都必须包含这个头部
+message MessageHeader {
+  int32 msg_id = 1;       // 消息ID
+  int64 timestamp = 2;    // 时间戳
+  string session_id = 3;  // 会话ID
+  int32 version = 4;      // 协议版本
+  int32 result_code = 5;  // 结果代码，0表示成功
+  string result_msg = 6;  // 结果消息
+}
+
+// 登录请求
+message LoginRequest {
+  MessageHeader header = 1;
+  string username = 2;
+  string password = 3;
+  string device_id = 4;
+  string client_version = 5;
+}
+
+// 登录响应
+message LoginResponse {
+  MessageHeader header = 1;
+  string user_id = 2;
+  string token = 3;
+  UserInfo user_info = 4;
+  ServerInfo server_info = 5;
+}
+
+// 心跳请求
+message HeartbeatRequest {
+  MessageHeader header = 1;
+  int64 client_time = 2;
+}
+
+// 心跳响应
+message HeartbeatResponse {
+  MessageHeader header = 1;
+  int64 server_time = 2;
+}
+
+// 位置同步请求
+message PositionSyncRequest {
+  MessageHeader header = 1;
+  string entity_id = 2;
+  Position position = 3;
+  Vector3 velocity = 4;
+  float rotation = 5;
+  int64 timestamp = 6;
+}
+
+// 位置同步响应
+message PositionSyncResponse {
+  MessageHeader header = 1;
+  bool success = 2;
+  repeated EntityPosition nearby_entities = 3;
+}
+
+// 聊天请求
+message ChatRequest {
+  MessageHeader header = 1;
+  string sender_id = 2;
+  string sender_name = 3;
+  string content = 4;
+  ChatType chat_type = 5;
+  string target_id = 6; // 私聊时的目标ID
+  string channel_id = 7; // 频道聊天时的频道ID
+}
+
+// 聊天响应
+message ChatResponse {
+  MessageHeader header = 1;
+  bool delivered = 2;
+  int64 message_id = 3;
+  int64 timestamp = 4;
+}
+
+// 战斗指令请求
+message CombatCommandRequest {
+  MessageHeader header = 1;
+  string attacker_id = 2;
+  string target_id = 3;
+  int32 skill_id = 4;
+  Position position = 5;
+  Vector3 direction = 6;
+  repeated string affected_targets = 7;
+  int64 timestamp = 8;
+}
+
+// 战斗指令响应
+message CombatCommandResponse {
+  MessageHeader header = 1;
+  bool success = 2;
+  repeated CombatResult results = 3;
+}
+
+// 辅助数据结构
+message UserInfo {
+  string user_id = 1;
+  string username = 2;
+  string nickname = 3;
+  int32 level = 4;
+  int64 exp = 5;
+  int32 vip_level = 6;
+  int64 last_login_time = 7;
+  int64 created_time = 8;
+}
+
+message ServerInfo {
+  string server_id = 1;
+  string server_name = 2;
+  int32 server_status = 3;
+  string server_address = 4;
+  int32 server_port = 5;
+  int32 online_count = 6;
+  int32 max_online_count = 7;
+}
+
+message Position {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message Vector3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message EntityPosition {
+  string entity_id = 1;
+  string entity_type = 2;
+  Position position = 3;
+  float rotation = 4;
+  Vector3 velocity = 5;
+}
+
+message CombatResult {
+  string target_id = 1;
+  bool hit = 2;
+  bool critical = 3;
+  int32 damage = 4;
+  int32 remaining_hp = 5;
+  repeated BuffEffect buff_effects = 6;
+}
+
+message BuffEffect {
+  int32 buff_id = 1;
+  string buff_name = 2;
+  int32 duration = 3;
+  int32 stacks = 4;
+}
+
+enum ChatType {
+  WORLD = 0;
+  PRIVATE = 1;
+  TEAM = 2;
+  GUILD = 3;
+  SYSTEM = 4;
+  CHANNEL = 5;
+}
+
+// 消息枚举，用于标识不同的消息类型
+enum MessageType {
+  UNKNOWN = 0;
+  LOGIN_REQUEST = 1001;
+  LOGIN_RESPONSE = 1002;
+  HEARTBEAT_REQUEST = 2001;
+  HEARTBEAT_RESPONSE = 2002;
+  POSITION_SYNC_REQUEST = 3001;
+  POSITION_SYNC_RESPONSE = 3002;
+  CHAT_REQUEST = 4001;
+  CHAT_RESPONSE = 4002;
+  COMBAT_COMMAND_REQUEST = 5001;
+  COMBAT_COMMAND_RESPONSE = 5002;
+} 
