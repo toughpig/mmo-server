@@ -166,6 +166,22 @@ enum ChatType {
   CHANNEL = 5;
 }
 
+// RPC消息的扩展定义
+// RPC请求
+message RPCRequest {
+  string service_method = 1; // 服务方法名 "Service.Method"
+  uint64 sequence = 2;       // 请求序列号
+  bytes args_data = 3;       // 序列化的参数数据
+}
+
+// RPC响应
+message RPCResponse {
+  string service_method = 1; // 服务方法名 "Service.Method"
+  uint64 sequence = 2;       // 请求序列号
+  string error = 3;          // 错误信息，如果有
+  bytes reply_data = 4;      // 序列化的响应数据
+}
+
 // 消息枚举，用于标识不同的消息类型
 enum MessageType {
   UNKNOWN = 0;
@@ -179,4 +195,8 @@ enum MessageType {
   CHAT_RESPONSE = 4002;
   COMBAT_COMMAND_REQUEST = 5001;
   COMBAT_COMMAND_RESPONSE = 5002;
+  
+  // RPC消息类型
+  RPC_REQUEST = 9001;
+  RPC_RESPONSE = 9002;
 } 

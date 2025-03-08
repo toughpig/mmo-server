@@ -16,6 +16,7 @@ mkdir -p proto_define/gen
 
 # Generate Go code from .proto files
 protoc --go_out=. --go_opt=paths=source_relative \
-    proto_define/message.proto
+    proto_define/message.proto \
+    proto_define/player.proto
 
 echo "Protocol Buffer code generated successfully!" 
