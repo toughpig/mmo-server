@@ -12,6 +12,7 @@ import (
 	"github.com/quic-go/quic-go"
 
 	"mmo-server/pkg/protocol"
+	"mmo-server/pkg/security"
 )
 
 // GatewayHandler 网关处理器，负责处理来自不同协议的连接和消息
@@ -29,6 +30,9 @@ type GatewayHandler struct {
 	shutdownCh        chan struct{}
 	serviceDiscovery  protocol.ServiceDiscovery
 	serviceRegistered bool
+	cryptoManager     *security.CryptoManager    // 加密管理器
+	sessionManager    *SessionManager            // 会话管理器
+	protocolConverter protocol.ProtocolConverter // 协议转换器
 }
 
 // NewGatewayHandler 创建网关处理器
@@ -67,16 +71,35 @@ func NewGatewayHandler(config *Config) (*GatewayHandler, error) {
 		router.RegisterServiceType(serviceTypeInt, serviceName)
 	}
 
+	// 初始化处理器
 	handler := &GatewayHandler{
-		config:           config,
-		router:           router,
-		converter:        converter,
-		registry:         registry,
-		sessions:         make(map[string]*Session),
-		sessionsByUser:   make(map[string]map[string]*Session),
-		shutdownCh:       make(chan struct{}),
-		serviceDiscovery: serviceDiscovery,
+		config:            config,
+		router:            router,
+		converter:         converter,
+		registry:          registry,
+		sessions:          make(map[string]*Session),
+		sessionsByUser:    make(map[string]map[string]*Session),
+		shutdownCh:        make(chan struct{}),
+		serviceDiscovery:  serviceDiscovery,
+		serviceRegistered: false,
+		protocolConverter: converter, // 使用同一个转换器实例
 	}
+
+	// 创建加密管理器
+	cryptoManager, err := security.NewCryptoManager(&security.CryptoConfig{
+		KeyRotationInterval: 86400, // 24小时
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create crypto manager: %w", err)
+	}
+	handler.cryptoManager = cryptoManager
+
+	// 创建会话管理器
+	sessionManager := NewSessionManager(
+		time.Duration(config.MaxSessionInactiveTime)*time.Second,
+		time.Duration(config.SessionCleanupInterval)*time.Second,
+	)
+	handler.sessionManager = sessionManager
 
 	// 注册内部消息处理器
 	handler.registerInternalHandlers()
@@ -136,7 +159,24 @@ func (h *GatewayHandler) Start() error {
 
 	// 启动QUIC服务器
 	if h.config.QUIC.Enabled {
-		h.quicServer, err = NewQUICServer(h.config.QUIC)
+		// 创建QUIC服务器配置
+		quicConfig := QUICServerConfig{
+			ListenAddr:      h.config.QUIC.Address,
+			CertFile:        h.config.QUIC.CertFile,
+			KeyFile:         h.config.QUIC.KeyFile,
+			IdleTimeout:     time.Duration(h.config.QUIC.IdleTimeout) * time.Second,
+			MaxStreams:      h.config.QUIC.MaxStreams,
+			MaxStreamBuffer: h.config.QUIC.BufferSize,
+		}
+
+		// 创建QUIC服务器
+		h.quicServer, err = NewQUICServer(
+			quicConfig,
+			h.cryptoManager,
+			h.sessionManager,
+			h.protocolConverter,
+			h,
+		)
 		if err != nil {
 			return fmt.Errorf("failed to create QUIC server: %w", err)
 		}

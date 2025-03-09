@@ -8,7 +8,9 @@ import (
 
 func TestCryptoManager_GenerateSessionKey(t *testing.T) {
 	// Create a new crypto manager
-	cm, err := NewCryptoManager(time.Hour)
+	cm, err := NewCryptoManager(&CryptoConfig{
+		KeyRotationInterval: int64(time.Hour / time.Second),
+	})
 	if err != nil {
 		t.Fatalf("Failed to create crypto manager: %v", err)
 	}
@@ -37,12 +39,16 @@ func TestCryptoManager_GenerateSessionKey(t *testing.T) {
 
 func TestCryptoManager_DeriveSharedKey(t *testing.T) {
 	// Create two crypto managers (for client and server)
-	clientCM, err := NewCryptoManager(time.Hour)
+	clientCM, err := NewCryptoManager(&CryptoConfig{
+		KeyRotationInterval: int64(time.Hour / time.Second),
+	})
 	if err != nil {
 		t.Fatalf("Failed to create client crypto manager: %v", err)
 	}
 
-	serverCM, err := NewCryptoManager(time.Hour)
+	serverCM, err := NewCryptoManager(&CryptoConfig{
+		KeyRotationInterval: int64(time.Hour / time.Second),
+	})
 	if err != nil {
 		t.Fatalf("Failed to create server crypto manager: %v", err)
 	}
@@ -71,7 +77,9 @@ func TestCryptoManager_DeriveSharedKey(t *testing.T) {
 
 func TestCryptoManager_Encrypt_Decrypt(t *testing.T) {
 	// Create a new crypto manager
-	cm, err := NewCryptoManager(time.Hour)
+	cm, err := NewCryptoManager(&CryptoConfig{
+		KeyRotationInterval: int64(time.Hour / time.Second),
+	})
 	if err != nil {
 		t.Fatalf("Failed to create crypto manager: %v", err)
 	}
@@ -113,7 +121,9 @@ func TestCryptoManager_Encrypt_Decrypt(t *testing.T) {
 
 func TestCryptoManager_EncryptWithTimestamp_DecryptWithTimestamp(t *testing.T) {
 	// Create a new crypto manager
-	cm, err := NewCryptoManager(time.Hour)
+	cm, err := NewCryptoManager(&CryptoConfig{
+		KeyRotationInterval: int64(time.Hour / time.Second),
+	})
 	if err != nil {
 		t.Fatalf("Failed to create crypto manager: %v", err)
 	}
@@ -149,7 +159,9 @@ func TestCryptoManager_EncryptWithTimestamp_DecryptWithTimestamp(t *testing.T) {
 
 func TestCryptoManager_RotateKeys(t *testing.T) {
 	// Create a new crypto manager with short rotation period
-	cm, err := NewCryptoManager(time.Millisecond)
+	cm, err := NewCryptoManager(&CryptoConfig{
+		KeyRotationInterval: 1, // 1 second minimum
+	})
 	if err != nil {
 		t.Fatalf("Failed to create crypto manager: %v", err)
 	}
@@ -177,7 +189,9 @@ func TestCryptoManager_RotateKeys(t *testing.T) {
 
 func TestCryptoManager_RemoveSessionKey(t *testing.T) {
 	// Create a new crypto manager
-	cm, err := NewCryptoManager(time.Hour)
+	cm, err := NewCryptoManager(&CryptoConfig{
+		KeyRotationInterval: int64(time.Hour / time.Second),
+	})
 	if err != nil {
 		t.Fatalf("Failed to create crypto manager: %v", err)
 	}

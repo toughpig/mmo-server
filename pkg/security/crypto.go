@@ -38,6 +38,11 @@ var (
 	ErrNoSharedSecret    = errors.New("could not generate shared secret")
 )
 
+// CryptoConfig 用于配置CryptoManager的参数
+type CryptoConfig struct {
+	KeyRotationInterval int64 // 密钥轮换间隔（秒）
+}
+
 // CryptoManager handles encryption and decryption operations
 type CryptoManager struct {
 	mu             sync.RWMutex
@@ -56,14 +61,17 @@ type EncryptedMessage struct {
 }
 
 // NewCryptoManager creates a new CryptoManager
-func NewCryptoManager(rotationPeriod time.Duration) (*CryptoManager, error) {
+func NewCryptoManager(config *CryptoConfig) (*CryptoManager, error) {
 	// Generate ECDH key pair for key exchange
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate ECDH key pair: %w", err)
 	}
 
-	if rotationPeriod <= 0 {
+	var rotationPeriod time.Duration
+	if config != nil && config.KeyRotationInterval > 0 {
+		rotationPeriod = time.Duration(config.KeyRotationInterval) * time.Second
+	} else {
 		rotationPeriod = DefaultKeyRotationInterval
 	}
 

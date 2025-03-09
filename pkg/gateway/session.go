@@ -140,16 +140,12 @@ func NewSessionWithQUIC(id string, connType protocol.ConnectionType, conn quic.C
 }
 
 // GetSession 获取指定ID的会话
-func (sm *SessionManager) GetSession(sessionID string) (*Session, error) {
+func (sm *SessionManager) GetSession(sessionID string) (*Session, bool) {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
-	session, ok := sm.sessions[sessionID]
-	if !ok {
-		return nil, ErrSessionNotFound
-	}
-
-	return session, nil
+	session, exists := sm.sessions[sessionID]
+	return session, exists
 }
 
 // GetAllSessions 获取所有会话
@@ -372,4 +368,51 @@ func (s *Session) ToJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(sessionJSON)
+}
+
+// AddSession 添加会话到管理器
+func (sm *SessionManager) AddSession(session *Session) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	if _, exists := sm.sessions[session.ID]; exists {
+		return ErrSessionAlreadyExists
+	}
+
+	sm.sessions[session.ID] = session
+	return nil
+}
+
+// UpdateLastActiveTime 更新会话最后活跃时间
+func (s *Session) UpdateLastActiveTime() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.LastActivity = time.Now()
+}
+
+// GetOrCreate 获取现有会话，如果不存在则创建新会话
+func (sm *SessionManager) GetOrCreate(sessionID string) *Session {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	// 检查会话是否存在
+	if session, exists := sm.sessions[sessionID]; exists && session != nil {
+		// 更新最后活动时间
+		session.UpdateLastActiveTime()
+		return session
+	}
+
+	// 创建新会话
+	session := &Session{
+		ID:             sessionID,
+		ConnectionType: protocol.ConnectionTypeQUIC, // 默认使用QUIC连接类型
+		LastActivity:   time.Now(),
+		mu:             sync.RWMutex{},
+		closed:         false,
+	}
+
+	// 添加到会话管理器
+	sm.sessions[sessionID] = session
+
+	return session
 }

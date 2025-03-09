@@ -284,6 +284,11 @@ else
   echo -e "${YELLOW}gRPC tests: STATUS UNKNOWN${NC}"
 fi
 
+# 测试QUIC协议和Metrics模块
+echo -e "${YELLOW}Testing QUIC protocol and Metrics module...${NC}"
+go test -v ./pkg/gateway -run TestQUIC 2>&1 | tee -a test_results.log
+go test -v ./pkg/metrics 2>&1 | tee -a test_results.log
+
 echo -e "${GREEN}Test suite execution completed!${NC}"
 echo -e "${YELLOW}Note: Some tests may still be running in the background.${NC}"
 echo -e "${YELLOW}They will be automatically terminated when this script exits.${NC}" 

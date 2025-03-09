@@ -39,6 +39,10 @@ go build -o bin/sync_test cmd/sync_test/main.go
 echo "Building AOI test tool..."
 go build -o bin/aoi_test cmd/aoi_test/main.go
 
+# Build the metrics service
+echo "Building metrics service..."
+go build -o bin/metrics cmd/metrics/main.go
+
 # Show success message and list of binaries
 echo "Build completed successfully!"
 echo "Binaries available in bin/ directory:"
@@ -50,6 +54,7 @@ echo "- bin/load_test: Load test tool"
 echo "- bin/rpc_test: RPC framework test using shmipc-go"
 echo "- bin/sync_test: Player state sync test tool"
 echo "- bin/aoi_test: Area Of Interest system test tool"
+echo "- bin/metrics: Monitoring and metrics service"
 
 # Check if binaries are executable
 echo "Checking binary permissions..."

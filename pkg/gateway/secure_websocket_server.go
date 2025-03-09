@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"mmo-server/pkg/security"
+	"mmo-server/pkg/utils"
 
 	"github.com/gorilla/websocket"
 )
@@ -33,7 +34,9 @@ func NewSecureWebSocketServer(config SecureWSConfig) (*SecureWebSocketServer, er
 	}
 
 	// 创建加密管理器，使用默认的24小时轮换间隔
-	cryptoManager, err := security.NewCryptoManager(24 * time.Hour)
+	cryptoManager, err := security.NewCryptoManager(&security.CryptoConfig{
+		KeyRotationInterval: int64(24 * time.Hour / time.Second),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create crypto manager: %w", err)
 	}
@@ -115,7 +118,7 @@ func (s *SecureWebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.R
 	conn.SetWriteDeadline(time.Now().Add(time.Duration(s.config.WriteTimeout) * time.Second))
 
 	// 创建安全连接
-	sessionID := generateSessionID()
+	sessionID := utils.GenerateSessionID()
 	secureConn := NewSecureWebSocketConnection(conn, s.cryptoManager, sessionID)
 
 	// 执行握手
@@ -127,9 +130,4 @@ func (s *SecureWebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.R
 
 	// 处理连接
 	go s.handler(secureConn)
-}
-
-// generateSessionID 生成会话ID
-func generateSessionID() string {
-	return fmt.Sprintf("%d", time.Now().UnixNano())
 }

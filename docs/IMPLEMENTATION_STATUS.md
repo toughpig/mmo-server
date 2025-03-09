@@ -188,9 +188,45 @@
 关键文件：
 - `pkg/db/cache_sync.go`: 缓存同步核心实现
 
+### 12. QUIC协议支持
+
+✅ 完成
+
+- 实现了基于QUIC协议的高性能安全通信
+- 支持多流并发通信
+- 集成安全加密层，提供端到端加密
+- 实现了与WebSocket相同的协议转换机制
+- 支持复用现有消息路由和会话管理功能
+- 实现了QUIC连接的会话管理
+- 添加了连接生命周期管理
+
+关键文件：
+- `pkg/gateway/quic_server.go`: QUIC服务器实现
+- `pkg/gateway/quic_stream_handler.go`: QUIC流处理器
+- `pkg/protocol/converter.go`: 支持QUIC协议的转换实现
+
+### 13. 监控和指标收集系统
+
+✅ 完成
+
+- 基于Prometheus实现的指标收集系统
+- 支持四种基本指标类型：计数器、仪表盘、直方图、摘要
+- 实现了系统资源使用的监控（内存、goroutine等）
+- 提供了连接、消息、Redis和数据库操作的指标收集器
+- 支持自定义指标和收集器
+- 提供HTTP端点暴露指标给Prometheus抓取
+- 集成了Grafana仪表盘配置
+
+关键文件：
+- `pkg/metrics/metrics.go`: 核心指标管理器
+- `pkg/metrics/collectors.go`: 各种指标收集器实现
+- `cmd/metrics/main.go`: 监控服务入口
+- `scripts/start_metrics.sh`: 监控服务启动脚本
+- `config/grafana/system_dashboard.json`: Grafana仪表盘配置
+
 ## 正在进行的工作
 
-### 12. 单元测试覆盖率提升
+### 14. 单元测试覆盖率提升
 
 🔄 进行中
 
@@ -201,7 +237,7 @@
 - 为Redis连接池和异步数据库访问层添加了单元测试
 - 需要继续增加更多边界条件和异常情况的测试
 
-### 13. 集成Envoy作为边缘代理
+### 15. 集成Envoy作为边缘代理
 
 🔄 进行中
 
